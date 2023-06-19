@@ -1,12 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
 use App\Models\Products;
 
-class ProductsController extends Controller
+class ProductsController extends BaseController
 {
+    public function __construct()
+    {
+        $this->middleware('client');
+    }
     /**
      * Display a listing of the resource.
      */

@@ -2,8 +2,13 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+  
+use App\Http\Controllers\Api\RegisterController;
+use App\Http\Controllers\Api\ProductsController;
+  
+Route::post('register', [RegisterController::class, 'register']);
+Route::post('login', [RegisterController::class, 'login']);
 
-// As rotas vêm sem o Create e Edit
-// Route::apiResource("/products", App\Http\Controllers\ProductsController::class);
-
-Route::resource("/products", App\Http\Controllers\ProductsController::class);
+Route::middleware('auth:api')->group( function () {
+    Route::resource("/products", ProductsController::class);
+});
