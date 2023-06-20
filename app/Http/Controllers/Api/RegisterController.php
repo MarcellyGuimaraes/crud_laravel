@@ -7,7 +7,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use Illuminate\Http\JsonResponse;
-     
+use Laravel\Passport\Passport;
+
 class RegisterController extends BaseController
 {
     /**
@@ -44,15 +45,27 @@ class RegisterController extends BaseController
      */
     public function login(Request $request): JsonResponse
     {
-        if(Auth::attempt(['email' => $request->email, 'password' => $request->password])){ 
-            $user = Auth::user(); 
-            $success['token'] =  $user->createToken('MyApp')-> accessToken; 
-            $success['name'] =  $user->name;
-   
-            return $this->sendResponse($success, 'User login successfully.');
-        } 
-        else{ 
-            return $this->sendError('Unauthorised.', ['error'=>'Unauthorised']);
-        } 
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            $user = Auth::user();
+
+            // Verificar se o client_id e client_secret são válidos
+            $client = Passport::client()->where('id', $request->client_id)
+                                       ->where('secret', $request->client_secret)
+                                       ->first();
+
+            if ($client) {
+                // Gerar um novo token de acesso para o usuário logado
+                $token = $user->createToken('MyApp')->accessToken;
+
+                $success['token'] = $token;
+                $success['name'] = $user->name;
+
+                return $this->sendResponse($success, 'User login successfully.');
+            } else {
+                return $this->sendError('Invalid client credentials.', ['error' => 'Invalid client credentials']);
+            }
+        } else {
+            return $this->sendError('Unauthorized.', ['error' => 'Unauthorized']);
+        }
     }
 }

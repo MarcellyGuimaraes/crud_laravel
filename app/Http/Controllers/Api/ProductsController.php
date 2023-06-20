@@ -7,10 +7,6 @@ use App\Models\Products;
 
 class ProductsController extends BaseController
 {
-    public function __construct()
-    {
-        $this->middleware('client');
-    }
     /**
      * Display a listing of the resource.
      */
