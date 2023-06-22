@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use Illuminate\Http\JsonResponse;
-use Laravel\Passport\Passport;
+use Laravel\Passport\Token;
 
 class RegisterController extends BaseController
 {
@@ -32,7 +32,7 @@ class RegisterController extends BaseController
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
         $user = User::create($input);
-        $success['token'] =  $user->createToken('MyApp')->accessToken;
+        $success['token'] =  $user->createToken('Laravel Personal Access Client')->accessToken;
         $success['name'] =  $user->name;
    
         return $this->sendResponse($success, 'User register successfully.');
@@ -47,25 +47,21 @@ class RegisterController extends BaseController
     {
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $user = Auth::user();
-
-            // Verificar se o client_id e client_secret são válidos
-            $client = Passport::client()->where('id', $request->client_id)
-                                       ->where('secret', $request->client_secret)
-                                       ->first();
-
-            if ($client) {
-                // Gerar um novo token de acesso para o usuário logado
-                $token = $user->createToken('MyApp')->accessToken;
-
-                $success['token'] = $token;
-                $success['name'] = $user->name;
-
-                return $this->sendResponse($success, 'User login successfully.');
-            } else {
-                return $this->sendError('Invalid client credentials.', ['error' => 'Invalid client credentials']);
+            
+            $existingToken = Token::where('user_id', $user->id)->first();
+            if ($existingToken) {
+                $existingToken->delete();
             }
+            
+            $token = $user->createToken('Laravel Personal Access Client')->accessToken;
+
+            $success['token'] = $token;
+            $success['name'] = $user->name;
+
+            return $this->sendResponse($success, 'User login successfully.');
         } else {
             return $this->sendError('Unauthorized.', ['error' => 'Unauthorized']);
         }
     }
+
 }
